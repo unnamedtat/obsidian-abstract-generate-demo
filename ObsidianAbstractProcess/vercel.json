@@ -2,7 +2,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "mainApp/wsgi.py"
+      "dest": "api/wsgi.py"
     }
   ]
 }
