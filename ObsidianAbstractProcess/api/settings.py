@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'process'
+    'rest_framework',
+    'process.apps.ProcessConfig'
 ]
 
 MIDDLEWARE = [
@@ -68,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'mainApp.wsgi.app'
+WSGI_APPLICATION = 'api.wsgi.app'
 
 
 # Database
