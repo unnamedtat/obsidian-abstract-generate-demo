@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-6c5)be1!1dfitk)ony)(65k3j=s6$l8%k%$9(j8$co1gnmibjm
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
 
 
 # Application definition
@@ -67,11 +67,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "ObsidianAbstractProcess.wsgi.application"
+WSGI_APPLICATION = "ObsidianAbstractProcess.wsgi.app"
 
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
+# Note: Django modules for using databases are not support in serverless
+# environments like Vercel. You can use a database over HTTP, hosted elsewhere.
 
 DATABASES = {
     # "default": {
