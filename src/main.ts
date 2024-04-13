@@ -1,7 +1,5 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
 interface MyPluginSettings {
 	mySetting: string;
 }
@@ -10,16 +8,46 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default'
 }
 
-export default class MyPlugin extends Plugin {
+export default class AbstractGeneratePlugin extends Plugin {
 	settings: MyPluginSettings;
 
 	async onload() {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		const ribbonIconEl = this.addRibbonIcon('dice', 'Generate Summary',async (evt: MouseEvent) => {
+			const activeView = getActiveViewMD.call(this);
+			if (!activeView) {
+				new Notice('No active Markdown view.');
+				return;
+			}
+			const activeFile=activeView.file;
+			// get file or its content && title
+			// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
+			const activeFileTitle=activeFile.basename;
+			try {
+			const activeFilecontent=await this.app.vault.cachedRead(activeFile)
+			const payloadActiveContent = {
+				activeFilecontent: activeFilecontent,
+				activeFileTitle: activeFileTitle
+			};
+			    // 使用fetch发送内容
+			const response = await fetch('http://your-api-url.com', {
+					method: 'POST',
+					headers: {
+					'Content-Type': 'application/json',
+					},
+					body:  JSON.stringify(payloadActiveContent)
+				});
+				if (!response.ok) {
+					throw new Error(response.statusText);
+				}
+				  // get response from server
+				return await response.json();
+				} catch (error) {
+				console.error('Error:', error);
+				throw error;
+				}
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -70,9 +98,9 @@ export default class MyPlugin extends Plugin {
 
 		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
 		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
+		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+		// 	console.log('click', evt);
+		// });
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
@@ -108,9 +136,9 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: AbstractGeneratePlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: AbstractGeneratePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -132,3 +160,30 @@ class SampleSettingTab extends PluginSettingTab {
 				}));
 	}
 }
+
+// getActiveViewMD returns the active MarkdownView
+function getActiveViewMD() {
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+
+    return activeView;
+}
+
+// sendmdToBackend sends data to the backend
+// async function sendDataToBackend(yourData) {
+// 	try {
+// 	  const response = await fetch('http://your-api-url.com', {
+// 		method: 'POST',
+// 		headers: {
+// 		  'Content-Type': 'application/json',
+// 		},
+// 		body: JSON.stringify(yourData)
+// 	  });
+// 	  if (!response.ok) throw new Error(response.statusText);
+// 	  const data = await response.json();
+// 	  return data;
+// 	} catch (error) {
+// 	  console.error('错误:', error);
+// 	  // 这里可以处理错误，或者将错误抛出供函数调用者处理
+// 	  throw error;
+// 	}
+//   }
