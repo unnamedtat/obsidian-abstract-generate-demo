@@ -32,7 +32,7 @@ export default class AbstractGeneratePlugin extends Plugin {
 				activeFileTitle: activeFileTitle
 			};
 			    // 使用fetch发送内容
-			const response = await fetch('http://your-api-url.com', {
+			const response = await fetch('https://obsidian-abstract.vercel.app/api', {
 					method: 'POST',
 					headers: {
 					'Content-Type': 'application/json',
