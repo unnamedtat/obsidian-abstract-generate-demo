@@ -11,7 +11,7 @@ interface AbstractGPluginSettings {
 const DEFAULT_SETTINGS: AbstractGPluginSettings = {
 	defaultStyle: "normal_promot",
 	isStreamOpen: false,
-	LLMModel: "ERNIE-4.0-8K",
+	LLMModel: "ERNIE_40_8K",
 	defaultLength: 200
 }
 
@@ -22,38 +22,7 @@ export default class AbstractGeneratePlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary', async (evt: MouseEvent) => {
-			const activeView = getActiveViewMD.call(this);
-			if (!activeView) {
-				new Notice('No active Markdown view.');
-				return;
-			}
-			const activeFile = activeView.file;
-			// get file or its content && title
-			// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
-			const activeFileTitle = activeFile.basename;
-			const activeFilecontent = await this.app.vault.cachedRead(activeFile)
-			const payloadActiveContent = {
-				content: activeFilecontent,
-				title: activeFileTitle,
-				style: this.settings.defaultStyle,
-				isStreamOpen: this.settings.isStreamOpen,
-				LLMModel: this.settings.LLMModel,
-				length: this.settings.defaultLength.toString()
-			};
-			// get response from backend
-			const response = await runPrompt(payloadActiveContent);
-			// console.log(response);
-			if (response) {
-				const generatedJSON = JSON.parse(response.json);
-				typeWord(activeView.editor, generatedJSON.result);
-				new Notice('Summary Generated Successfully!✨');
-				new Notice('tokens consumed: ' + generatedJSON.total_tokens);
-			} else {
-				new Notice('Summary Generatation Failed!😭');
-			}
-
-		});
+		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary', ()=> generateSummary.call(this));
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('abstract-generate-icon');
 
@@ -195,7 +164,7 @@ class PromotSettingTab extends PluginSettingTab {
 			.setDesc('选择需要使用的模型')
 			.addDropdown((dropdown) => {
 				const settingOptions = {
-					"ERNIE-4.0-8K": "ERNIE-4.0-8K",
+					"ERNIE_4.0_8K": "ERNIE-4.0-8K",
 				}
 
 				dropdown
@@ -231,7 +200,8 @@ function getActiveViewMD() {
 async function runPrompt(articleContent: object) {
 	const options: RequestUrlParam = {
 		// url: 'http://obsidian-abstract.vercel.app/api/',
-		url: 'http://127.0.0.1:8000/api/',// for local testing
+		// url: 'http://127.0.0.1:8000/api/',// for local testing
+		url: 'https://obsabst.unnamedtat.xyz/api/',// for local testing
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -252,6 +222,7 @@ function typeWord(editor: Editor, text: string) {
 	editor.replaceRange(text, cursor);
 }
 
+// functions for stream type, but have not be implement 
 
 // function typeWord2(editor: Editor) {
 // 	let enableCursor = true;  // 启用光标效果
@@ -307,3 +278,36 @@ function typeWord(editor: Editor, text: string) {
 //     });
 //   }
 
+// generateSummary generates a summary
+async function generateSummary (evt: MouseEvent) {
+	const activeView = getActiveViewMD.call(this);
+	if (!activeView) {
+		new Notice('No active Markdown view.');
+		return;
+	}
+	const activeFile = activeView.file;
+	// get file or its content && title
+	// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
+	const activeFileTitle = activeFile.basename;
+	const activeFilecontent = await this.app.vault.cachedRead(activeFile)
+	const payloadActiveContent = {
+		content: activeFilecontent,
+		title: activeFileTitle,
+		style: this.settings.defaultStyle,
+		isStreamOpen: this.settings.isStreamOpen,
+		LLMModel: this.settings.LLMModel,
+		length: this.settings.defaultLength.toString()
+	};
+	// get response from backend
+	const response = await runPrompt(payloadActiveContent);
+	// console.log(response);
+	if (response) {
+		const generatedJSON = JSON.parse(response.json);
+		typeWord(activeView.editor, generatedJSON.result);
+		new Notice('Summary Generated Successfully!✨');
+		new Notice('tokens consumed: ' + generatedJSON.total_tokens);
+	} else {
+		new Notice('Summary Generatation Failed!😭');
+	}
+
+}

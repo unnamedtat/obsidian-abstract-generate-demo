@@ -3,6 +3,7 @@ import json
 import requests
 
 from process.promots import *
+from process.models import *
 
 # we should consider the article_data is too long, or the language is not suitable for the model[!mark]
 def get_post_message(article_data:json):
@@ -12,6 +13,7 @@ def get_post_message(article_data:json):
 def ask_Q(article_data: str):
     try:
         url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=" + os.environ['ACCESS_TOKEN']
+        # 我没充值，所以我没法调用其他model的接口，这里没用其他url
 
         payload = json.dumps({
         "messages": [
