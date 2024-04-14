@@ -4,18 +4,22 @@ import requests
 
 # users can select the model and promots they want to use
 def ask_Q():
-    url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=" + os.environ['ACCESS_TOKEN']
+    try:
+        url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=" + os.environ['ACCESS_TOKEN']
 
-    payload = json.dumps({
+        payload = json.dumps({
         "messages": [
             {
                 "role": "user",
                 "content": "你好，我在测试我的功能。"
             }
         ]
-    })
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    response = requests.request("POST", url, headers=headers, data=payload)
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+    except Exception as e:
+        print(f"Error occurred while processing request: {e}")
+        return {"error": str(e)}
     return response.text
