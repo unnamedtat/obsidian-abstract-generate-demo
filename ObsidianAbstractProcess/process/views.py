@@ -5,7 +5,7 @@ from rest_framework.response import Response
 import logging
 
 
-from getAbstract import ask_Q
+from process.getAbstract import ask_Q
 logger = logging.getLogger(__name__)
 
 class BotView(APIView):
