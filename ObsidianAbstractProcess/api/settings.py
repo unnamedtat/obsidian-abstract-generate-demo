@@ -134,4 +134,5 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_WHITELIST = [
     'app://obsidian.md',
+    'http://obsidian-abstract.vercel.app'
 ]
