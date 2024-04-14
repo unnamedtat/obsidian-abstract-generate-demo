@@ -1,5 +1,4 @@
 import requests
-import os
 
 
 def get_access_token(
