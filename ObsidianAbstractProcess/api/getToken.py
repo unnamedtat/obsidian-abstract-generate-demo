@@ -20,9 +20,3 @@ def get_access_token(
     response = requests.request("POST", url, headers=headers)
     return response.json().get("access_token")
 
-api_key = os.environ.get('API_KEY')
-secret_key = os.environ.get('SECRET_KEY')
-
-# Get Access Token, you can use AWS KMS etc. to store the API Key and Secret Key
-access_token = get_access_token(api_key, secret_key)
-os.environ['ACCESS_TOKEN'] = access_token
