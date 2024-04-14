@@ -5,12 +5,14 @@ interface AbstractGPluginSettings {
 	defaultStyle: string;
 	isStreamOpen: boolean;
 	LLMModel: string;
+	defaultLength: number;
 }
 
 const DEFAULT_SETTINGS: AbstractGPluginSettings = {
 	defaultStyle: "normal_promot",
 	isStreamOpen: false,
 	LLMModel: "ERNIE-4.0-8K",
+	defaultLength: 200
 }
 
 export default class AbstractGeneratePlugin extends Plugin {
@@ -20,35 +22,37 @@ export default class AbstractGeneratePlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary',async (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary', async (evt: MouseEvent) => {
 			const activeView = getActiveViewMD.call(this);
 			if (!activeView) {
 				new Notice('No active Markdown view.');
 				return;
 			}
-			const activeFile=activeView.file;
+			const activeFile = activeView.file;
 			// get file or its content && title
 			// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
-			const activeFileTitle=activeFile.basename;
-			const activeFilecontent=await this.app.vault.cachedRead(activeFile)
+			const activeFileTitle = activeFile.basename;
+			const activeFilecontent = await this.app.vault.cachedRead(activeFile)
 			const payloadActiveContent = {
 				content: activeFilecontent,
 				title: activeFileTitle,
 				style: this.settings.defaultStyle,
 				isStreamOpen: this.settings.isStreamOpen,
-				LLMModel: this.settings.LLMModel
+				LLMModel: this.settings.LLMModel,
+				length: this.settings.defaultLength.toString()
 			};
 			// get response from backend
 			const response = await runPrompt(payloadActiveContent);
-			console.log(response);
-			if(response){
-				new Notice('Summary Generated✨!');
-				const generatedJSON=JSON.parse(response.json);
-				typeWord(activeView.editor,generatedJSON.result);
-			}else{
+			// console.log(response);
+			if (response) {
+				const generatedJSON = JSON.parse(response.json);
+				typeWord(activeView.editor, generatedJSON.result);
+				new Notice('Summary Generated Successfully!✨');
+				new Notice('tokens consumed: ' + generatedJSON.total_tokens);
+			} else {
 				new Notice('Summary Generatation Failed!😭');
 			}
-			
+
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('abstract-generate-icon');
@@ -129,12 +133,12 @@ class SampleModal extends Modal {
 	}
 
 	onOpen() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.setText('Woah!');
 	}
 
 	onClose() {
-		const {contentEl} = this;
+		const { contentEl } = this;
 		contentEl.empty();
 	}
 }
@@ -148,93 +152,104 @@ class PromotSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
 		// default style setting
 		new Setting(containerEl)
-		.setName('默认风格')
-		.setDesc('选择摘要的生成风格')
-		.addDropdown((dropdown) => {
-			const settingOptions ={
-				"normal_promot": "通用风格",
-				"redbook_prompt": "小红书(内容分享社区)",
-				"zhihu_prompt": "知乎(问答社区)",
-				"gzh_prompt": "公众号(内容营销)",
-				"weibo_prompt": "微博(社交平台)",
-				"news_prompt": "新闻报道(媒体宣传)"
-			}
+			.setName('默认风格')
+			.setDesc('选择摘要的生成风格')
+			.addDropdown((dropdown) => {
+				const settingOptions = {
+					"normal_promot": "通用风格",
+					"redbook_prompt": "小红书(内容分享社区)",
+					"zhihu_prompt": "知乎(问答社区)",
+					"gzh_prompt": "公众号(内容营销)",
+					"weibo_prompt": "微博(社交平台)",
+					"news_prompt": "新闻报道(媒体宣传)"
+				}
 
-			dropdown
-			.addOptions(settingOptions)
-			.setValue(this.plugin.settings.defaultStyle)
-			.onChange(async (value) => {
-					this.plugin.settings.defaultStyle = value;
-					await this.plugin.saveSettings();
-				});
-		});	
+				dropdown
+					.addOptions(settingOptions)
+					.setValue(this.plugin.settings.defaultStyle)
+					.onChange(async (value) => {
+						this.plugin.settings.defaultStyle = value;
+						await this.plugin.saveSettings();
+					});
+			});
 		// is stream open setting
 		new Setting(containerEl)
-			.setName('是否开启流式接口')
+			.setName('是否开启流式生成')
 			.setDesc('开启后，将会实时返回摘要结果')
 			.addToggle((toggle) => {
 				toggle
-				.setValue(this.plugin.settings.isStreamOpen)
-				.onChange(async (value) => {
-					this.plugin.settings.isStreamOpen = value;
-				});
+					.setValue(this.plugin.settings.isStreamOpen)
+					.onChange(async (value) => {
+						this.plugin.settings.isStreamOpen = value;
+					});
 			});
-			// select LLM model
-			new Setting(containerEl)
+		// select LLM model
+		new Setting(containerEl)
 			.setName('选择模型')
 			.setDesc('选择需要使用的模型')
 			.addDropdown((dropdown) => {
-				const settingOptions ={
+				const settingOptions = {
 					"ERNIE-4.0-8K": "ERNIE-4.0-8K",
 				}
-	
+
 				dropdown
-				.addOptions(settingOptions)
-				.setValue(this.plugin.settings.LLMModel)
-				.onChange(async (value) => {
+					.addOptions(settingOptions)
+					.setValue(this.plugin.settings.LLMModel)
+					.onChange(async (value) => {
 						this.plugin.settings.LLMModel = value;
 						await this.plugin.saveSettings();
 					});
-			});	
+			});
+		new Setting(containerEl)
+		.setName('摘要长度')
+		.setDesc('摘要的长度设置')
+		.addText(text => {
+			text.setValue(this.plugin.settings.defaultLength.toString())
+			.onChange(async (value) => {
+				this.plugin.settings.defaultLength = parseInt(value);
+				await this.plugin.saveSettings();
+			});
+
+		});
 	}
 }
 
 // getActiveViewMD returns the active MarkdownView
 function getActiveViewMD() {
-    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+	const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 
-    return activeView;
+	return activeView;
 }
 
 // sendmdToBackend sends data to the backend
 async function runPrompt(articleContent: object) {
 	const options: RequestUrlParam = {
-		url: 'http://obsidian-abstract.vercel.app/api/',
-		// url: 'http://127.0.0.1:8000/api/',// for local testing
+		// url: 'http://obsidian-abstract.vercel.app/api/',
+		url: 'http://127.0.0.1:8000/api/',// for local testing
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(articleContent)
 	};
-	try{
-	const response = await requestUrl(options)
-	const data = await response;
-	return data;
-	}catch(e){
+	try {
+		const response = await requestUrl(options)
+		const data = await response;
+		return data;
+	} catch (e) {
 		console.error(e);
 	}
 }
 // getActiveCursor returns the active cursor
 function typeWord(editor: Editor, text: string) {
-	let cursor = editor.getCursor(); 
-	editor.replaceRange(text, cursor); 
+	let cursor = editor.getCursor();
+	editor.replaceRange(text, cursor);
 }
 
 
