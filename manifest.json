@@ -1,11 +1,11 @@
 {
 	"id": "abstract-plugin",
 	"name": "Abstract Generate",
-	"version": "1.0.0",
+	"version": "0.15.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
+	"description": "Abstract Generatatin for Obsidian API.Just a demo for my learning.",
 	"author": "unnamedtat",
-	"authorUrl": "https://obsidian.md",
+	"authorUrl": "https://unnamedtat.xyz",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }

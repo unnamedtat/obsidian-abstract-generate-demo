@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, RequestUrlParam, Setting, requestUrl } from 'obsidian';
+import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, RequestUrlParam, Setting, requestUrl } from 'obsidian';
 
 
 interface AbstractGPluginSettings {
@@ -11,7 +11,7 @@ interface AbstractGPluginSettings {
 const DEFAULT_SETTINGS: AbstractGPluginSettings = {
 	defaultStyle: "normal_promot",
 	isStreamOpen: false,
-	LLMModel: "ERNIE_40_8K",
+	LLMModel: "ERNIE_35_8K",
 	defaultLength: 200
 }
 
@@ -164,7 +164,7 @@ class PromotSettingTab extends PluginSettingTab {
 			.setDesc('选择需要使用的模型')
 			.addDropdown((dropdown) => {
 				const settingOptions = {
-					"ERNIE_4.0_8K": "ERNIE-4.0-8K",
+					"ERNIE_35_8K": "ERNIE_3.5_8K",
 				}
 
 				dropdown
@@ -200,8 +200,7 @@ function getActiveViewMD() {
 async function runPrompt(articleContent: object) {
 	const options: RequestUrlParam = {
 		// url: 'http://obsidian-abstract.vercel.app/api/',
-		// url: 'http://127.0.0.1:8000/api/',// for local testing
-		url: 'https://obsabst.unnamedtat.xyz/api/',// for local testing
+		url: 'http://127.0.0.1:8000/api/',// for local testing
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -217,8 +216,7 @@ async function runPrompt(articleContent: object) {
 	}
 }
 // getActiveCursor returns the active cursor
-function typeWord(editor: Editor, text: string) {
-	let cursor = editor.getCursor();
+function typeWord(editor: Editor,cursor:EditorPosition, text: string) {
 	editor.replaceRange(text, cursor);
 }
 
@@ -286,7 +284,9 @@ async function generateSummary (evt: MouseEvent) {
 		return;
 	}
 	const activeFile = activeView.file;
-	// get file or its content && title
+	const activeEditor = activeView.editor;
+	const activeCursor = activeEditor.getCursor();
+
 	// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
 	const activeFileTitle = activeFile.basename;
 	const activeFilecontent = await this.app.vault.cachedRead(activeFile)
@@ -299,15 +299,38 @@ async function generateSummary (evt: MouseEvent) {
 		length: this.settings.defaultLength.toString()
 	};
 	// get response from backend
-	const response = await runPrompt(payloadActiveContent);
+	// const response = await runPrompt(payloadActiveContent);
+	const response = await runWithLoading(activeEditor,activeCursor,runPrompt,[payloadActiveContent]);
 	// console.log(response);
 	if (response) {
 		const generatedJSON = JSON.parse(response.json);
-		typeWord(activeView.editor, generatedJSON.result);
+		typeWord(activeView.editor,activeCursor, generatedJSON.result);
 		new Notice('Summary Generated Successfully!✨');
-		new Notice('tokens consumed: ' + generatedJSON.total_tokens);
+		console.log(generatedJSON);
+		new Notice('tokens consumed: ' + generatedJSON.usage.total_tokens);
 	} else {
 		new Notice('Summary Generatation Failed!😭');
 	}
 
+}
+// add cute animation when waiting for the response
+async function runWithLoading(editor:Editor, pos:EditorPosition,asyncFunc:Function,args:any[] ) {
+    let chars = ["|", "/", "-", "\\"];
+    let i = 0;
+
+    let loadingStrPos = {...pos};
+    editor.replaceRange(chars[i++ % chars.length], pos);
+
+    // waiting for the function to finish
+    let interval = setInterval(() => {
+        let replacePos = {...loadingStrPos};
+        editor.replaceRange(chars[i++ % chars.length], replacePos, {line: replacePos.line, ch: replacePos.ch+1});
+    }, 100);
+
+    let result=await asyncFunc(...args);
+
+    // clear the loading animation
+    clearInterval(interval);
+    editor.replaceRange('', loadingStrPos, {line: loadingStrPos.line, ch: loadingStrPos.ch+1});
+	return result;
 }
