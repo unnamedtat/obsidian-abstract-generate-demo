@@ -154,21 +154,20 @@ function getActiveViewMD() {
 }
 
 // sendmdToBackend sends data to the backend
-async function sendDataToBackend(mdContent: any) {
-	try {
-	console.log(mdContent);	
-	const response = await fetch('http://obsidian-abstract.vercel.app/', {
+async function sendDataToBackend(mdContent: object) {
+	const options: RequestUrlParam = {
+		url: 'http://obsidian-abstract.vercel.app/',
 		method: 'POST',
 		headers: {
-		'Content-Type': 'application/json',
+			'Content-Type': 'application/json'
 		},
-		body: mdContent
-	});
-	if (!response.ok) throw new Error(response.statusText);
-	const data = await response.json();
+		body: JSON.stringify(mdContent)
+	};
+	try{
+	const response = await requestUrl(options);
+	const data = await response.json;
 	return data;
-	} catch (error) {
-	console.error('error:', error);
-	throw error;
+	}catch(e){
+		console.error(e);
 	}
 }
