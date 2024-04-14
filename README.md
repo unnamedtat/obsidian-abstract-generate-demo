@@ -8,7 +8,7 @@
 
 ## settings
 
-![settings](images\pic1.png)
+![settings](images/pic1.png)
 
 - 选择生成的promot模板
 - 开启流式生成（未完成）
@@ -17,11 +17,11 @@
 
 ## 效果
 
-![效果](images\pic4.gif)
+![效果](images/pic4.gif)
 
-![效果2](images\pic2.png)
+![效果2](images/pic2.png)
 
-![效果3](images\pic3.png)
+![效果3](images/pic3.png)
 
 ## 后端
 
