@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class BotView(APIView):
     def post(self, request):
         try:
-            # data = request.data
+            data = request.data
             
             # gpt_response = openai.Completion.create(
             #     engine="text-davinci-003",
@@ -17,7 +17,7 @@ class BotView(APIView):
             #     max_tokens=2048
             # )
             
-            return Response("test_response")
+            return Response(data)
         except Exception as e:
             logger.error(f"Error occurred while processing request: {e}", exc_info=True)
             return Response({"error": str(e)}, status=400)
