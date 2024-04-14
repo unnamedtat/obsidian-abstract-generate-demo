@@ -156,7 +156,7 @@ function getActiveViewMD() {
 // sendmdToBackend sends data to the backend
 async function sendDataToBackend(mdContent: object) {
 	const options: RequestUrlParam = {
-		url: 'http://obsidian-abstract.vercel.app/',
+		url: 'http://obsidian-abstract.vercel.app/api/',
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
