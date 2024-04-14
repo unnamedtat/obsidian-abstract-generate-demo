@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 import logging
 
+import os
 logger = logging.getLogger(__name__)
 
 class BotView(APIView):
@@ -17,7 +18,7 @@ class BotView(APIView):
             #     max_tokens=2048
             # )
             
-            return Response(data)
+            return Response(os.environ['ACCESS_TOKEN'])
         except Exception as e:
             logger.error(f"Error occurred while processing request: {e}", exc_info=True)
             return Response({"error": str(e)}, status=400)
