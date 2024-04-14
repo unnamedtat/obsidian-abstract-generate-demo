@@ -133,7 +133,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-CORS_ORIGIN_WHITELIST = [
+CORS_ALLOWED_ORIGINS  = [
     'app://obsidian.md',
     'http://obsidian-abstract.vercel.app'
 ]

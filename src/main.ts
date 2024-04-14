@@ -157,7 +157,7 @@ function getActiveViewMD() {
 async function sendDataToBackend(mdContent: any) {
 	try {
 	console.log(mdContent);	
-	const response = await fetch('http://obsidian-abstract.vercel.app/api/', {
+	const response = await fetch('http://obsidian-abstract.vercel.app/', {
 		method: 'POST',
 		headers: {
 		'Content-Type': 'application/json',
