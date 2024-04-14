@@ -2,11 +2,11 @@ import os
 import json
 import requests
 
-from process.promots import normal_promot
+from process.promots import *
 
 # we should consider the article_data is too long, or the language is not suitable for the model[!mark]
 def get_post_message(article_data:json):
-    return normal_promot+"文章题目为："+article_data['title']+"。文章内容为："+article_data['content']
+    return eval(article_data['style'])+"文章题目为："+article_data['title']+"。文章内容为："+article_data['content']
 
 # users can select the model and promots they want to use
 def ask_Q(article_data: str):
