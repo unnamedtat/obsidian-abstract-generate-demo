@@ -1,4 +1,4 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, RequestUrlParam, Setting, requestUrl } from 'obsidian';
 
 interface MyPluginSettings {
 	mySetting: string;
@@ -25,29 +25,14 @@ export default class AbstractGeneratePlugin extends Plugin {
 			// get file or its content && title
 			// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
 			const activeFileTitle=activeFile.basename;
-			try {
 			const activeFilecontent=await this.app.vault.cachedRead(activeFile)
 			const payloadActiveContent = {
 				activeFilecontent: activeFilecontent,
 				activeFileTitle: activeFileTitle
 			};
-			    // 使用fetch发送内容
-			const response = await fetch('https://obsidian-abstract.vercel.app/api', {
-					method: 'POST',
-					headers: {
-					'Content-Type': 'application/json',
-					},
-					body:  JSON.stringify(payloadActiveContent)
-				});
-				if (!response.ok) {
-					throw new Error(response.statusText);
-				}
-				  // get response from server
-				return await response.json();
-				} catch (error) {
-				console.error('Error:', error);
-				throw error;
-				}
+			// get response from backend
+			const response = await sendDataToBackend(payloadActiveContent);
+			console.log(response);
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -169,21 +154,21 @@ function getActiveViewMD() {
 }
 
 // sendmdToBackend sends data to the backend
-// async function sendDataToBackend(yourData) {
-// 	try {
-// 	  const response = await fetch('http://your-api-url.com', {
-// 		method: 'POST',
-// 		headers: {
-// 		  'Content-Type': 'application/json',
-// 		},
-// 		body: JSON.stringify(yourData)
-// 	  });
-// 	  if (!response.ok) throw new Error(response.statusText);
-// 	  const data = await response.json();
-// 	  return data;
-// 	} catch (error) {
-// 	  console.error('错误:', error);
-// 	  // 这里可以处理错误，或者将错误抛出供函数调用者处理
-// 	  throw error;
-// 	}
-//   }
+async function sendDataToBackend(mdContent: any) {
+	try {
+	console.log(mdContent);	
+	const response = await fetch('http://127.0.0.1:8000/api/', {
+		method: 'POST',
+		headers: {
+		'Content-Type': 'application/json',
+		},
+		body: mdContent
+	});
+	if (!response.ok) throw new Error(response.statusText);
+	const data = await response.json();
+	return data;
+	} catch (error) {
+	console.error('error:', error);
+	throw error;
+	}
+}
