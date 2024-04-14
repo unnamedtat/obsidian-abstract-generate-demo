@@ -1,7 +1,7 @@
 # # example/views.py
-from datetime import datetime
+# from datetime import datetime
 
-from django.http import HttpResponse
+# from django.http import HttpResponse
 
 # def index(request):
 #     now = datetime.now()
@@ -26,17 +26,14 @@ logger = logging.getLogger(__name__)
 class BotView(APIView):
     def post(self, request):
         try:
-            # 从请求体中获取数据
             # data = request.data
             
-            # 调用GPT API并获取响应
             # gpt_response = openai.Completion.create(
             #     engine="text-davinci-003",
             #     prompt=data["prompt"],
             #     max_tokens=2048
             # )
             
-        #     # 返回GPT响应
             return Response("test_response")
         except Exception as e:
             logger.error(f"Error occurred while processing request: {e}", exc_info=True)
