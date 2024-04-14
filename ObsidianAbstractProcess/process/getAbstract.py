@@ -21,5 +21,5 @@ def ask_Q():
         response = requests.request("POST", url, headers=headers, data=payload)
     except Exception as e:
         print(f"Error occurred while processing request: {e}")
-        return {"error": str(e)}
+        return {"error": e}
     return response.text

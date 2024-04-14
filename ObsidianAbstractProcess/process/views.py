@@ -13,11 +13,11 @@ class BotView(APIView):
         try:
             data = request.data
             
-            Response=ask_Q()
+            res=ask_Q()
             # return Response
-            
-            return Response(data)
+            # print(res)
+            return Response(res)
         except Exception as e:
             logger.error(f"Error occurred while processing request: {e}", exc_info=True)
-            return Response({"error": str(e)}, status=400)
+            return Response({"error": e}, status=400)
             
