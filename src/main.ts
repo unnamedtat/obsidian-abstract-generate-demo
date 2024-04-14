@@ -27,12 +27,20 @@ export default class AbstractGeneratePlugin extends Plugin {
 			const activeFileTitle=activeFile.basename;
 			const activeFilecontent=await this.app.vault.cachedRead(activeFile)
 			const payloadActiveContent = {
-				activeFilecontent: activeFilecontent,
-				activeFileTitle: activeFileTitle
+				content: activeFilecontent,
+				title: activeFileTitle
 			};
 			// get response from backend
-			const response = await sendDataToBackend(payloadActiveContent);
+			const response = await runPrompt(payloadActiveContent);
 			console.log(response);
+			if(response){
+				new Notice('Summary Generated✨!');
+				const generatedJSON=JSON.parse(response.json);
+				typeWord(activeView.editor,generatedJSON.result);
+			}else{
+				new Notice('Summary Generatation Failed!😭');
+			}
+			
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -154,21 +162,82 @@ function getActiveViewMD() {
 }
 
 // sendmdToBackend sends data to the backend
-async function sendDataToBackend(mdContent: object) {
+async function runPrompt(articleContent: object) {
 	const options: RequestUrlParam = {
-		url: 'http://obsidian-abstract.vercel.app/api/',
-		// url: 'http://127.0.0.1:8000/api/',
+		// url: 'http://obsidian-abstract.vercel.app/api/',
+		url: 'http://127.0.0.1:8000/api/',// for local testing
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify(mdContent)
+		body: JSON.stringify(articleContent)
 	};
 	try{
-	const response = await requestUrl(options);
-	const data = await response.json;
+	const response = await requestUrl(options)
+	const data = await response;
 	return data;
 	}catch(e){
 		console.error(e);
 	}
 }
+// getActiveCursor returns the active cursor
+function typeWord(editor: Editor, text: string) {
+	let cursor = editor.getCursor(); 
+	editor.replaceRange(text, cursor); 
+}
+
+
+// function typeWord2(editor: Editor) {
+// 	let enableCursor = true;  // 启用光标效果
+// 	let char_index = 0;
+// 	let text = 'Hello, World';
+//     let cursor = editor.getCursor();
+//     let docValue = editor.getValue();
+
+//     //移除原有的光标
+//     if (enableCursor && docValue.endsWith('|')) {
+//         docValue = docValue.slice(0, -1);
+//     }
+
+//     if (char_index < text.length) {
+//         let cursorChar = enableCursor ? "|" : "";
+//         editor.setValue(docValue + text.charAt(char_index) + cursorChar);
+//         editor.setCursor({line: cursor.line, ch: cursor.ch + 1}) //移动光标
+//         char_index++;
+//         // setTimeout(typeWord2, 1000/5);  // 打字机速度控制, 每秒5个字
+//     }
+// }
+
+
+
+// function run_prompt() {
+//     // 调用服务端的流式接口, 修改为自己的服务器地址和端口号
+//     fetch('http://<server address>:8000/eb_stream', {
+//       method: 'post',
+//       headers: {'Content-Type': 'text/plain'},
+//       body: JSON.stringify({'prompt': inputValue})
+//     })
+//     .then(response => {
+//       return response.body;
+//     })
+//     .then(body => {
+//       const reader = body.getReader();
+//       const decoder = new TextDecoder();
+//       function read() {
+//         return reader.read().then(({ done, value }) => {
+//           if (done) { // 读取完成
+//             return;
+//           }
+//           data = decoder.decode(value, { stream: true });
+//           text += JSON.parse(data).result;
+//           type();  // 打字机效果输出
+//           return read();
+//         });
+//       }
+//       return read();
+//     })
+//     .catch(error => {
+//       console.error('发生错误:', error);
+//     });
+//   }
+
