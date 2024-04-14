@@ -5,7 +5,7 @@ from rest_framework.response import Response
 import logging
 
 
-# from getAbstract import ask_Q
+from getAbstract import ask_Q
 logger = logging.getLogger(__name__)
 
 class BotView(APIView):
@@ -13,7 +13,7 @@ class BotView(APIView):
         try:
             data = request.data
             
-            # Response=ask_Q(data['activeFilecontent'])
+            Response=ask_Q()
             # return Response
             
             return Response(data)
