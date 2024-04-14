@@ -13,7 +13,7 @@ class BotView(APIView):
         try:
             data = request.data
             
-            Response=ask_Q()
+            # Response=ask_Q()
             # return Response
             
             return Response(data)
