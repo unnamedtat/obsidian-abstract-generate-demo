@@ -13,10 +13,10 @@ class BotView(APIView):
         try:
             data = request.data
             
-            Response=ask_Q(data['activeFilecontent'])
-            return Response
+            # Response=ask_Q(data['activeFilecontent'])
+            # return Response
             
-            # return Response(os.environ['ACCESS_TOKEN'])
+            return Response(data)
         except Exception as e:
             logger.error(f"Error occurred while processing request: {e}", exc_info=True)
             return Response({"error": str(e)}, status=400)
