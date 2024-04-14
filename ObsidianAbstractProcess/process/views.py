@@ -19,9 +19,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-import logging
+# import logging
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 class BotView(APIView):
     def post(self, request):
@@ -36,6 +36,6 @@ class BotView(APIView):
             
             return Response("test_response")
         except Exception as e:
-            logger.error(f"Error occurred while processing request: {e}", exc_info=True)
+            # logger.error(f"Error occurred while processing request: {e}", exc_info=True)
             return Response({"error": str(e)}, status=400)
             
