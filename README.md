@@ -30,3 +30,10 @@
 ```shell
 python manage.py runserver
 ```
+
+set envs variable
+
+```
+API_KEY
+SECRET_KEY
+```
