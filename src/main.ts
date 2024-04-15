@@ -210,7 +210,7 @@ class PromotSettingTab extends PluginSettingTab {
 // sendmdToBackend sends data to the backend
 async function runPrompt(articleContent: object) {
 	const options: RequestUrlParam = {
-		// url: 'http://obsidian-abstract.vercel.app/api/',
+		// url: 'http://*.vercel.app/api/',
 		url: 'http://127.0.0.1:8000/api/',// for local testing
 		method: 'POST',
 		headers: {
