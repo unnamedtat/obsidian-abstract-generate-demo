@@ -1,7 +1,7 @@
 {
 	"id": "abstract-plugin",
 	"name": "Abstract Generate",
-	"version": "0.15.1",
+	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Abstract Generatatin for Obsidian API.Just a demo for my learning.",
 	"author": "unnamedtat",
