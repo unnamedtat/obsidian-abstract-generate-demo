@@ -1,5 +1,5 @@
 import { App, Editor, EditorPosition, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, RequestUrlParam, Setting, requestUrl } from 'obsidian';
-
+import { styleSettingOptions } from './constSetting'
 
 interface AbstractGPluginSettings {
 	defaultStyle: string;
@@ -22,7 +22,14 @@ export default class AbstractGeneratePlugin extends Plugin {
 		await this.loadSettings();
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary', ()=> generateSummary.call(this));
+		const ribbonIconEl = this.addRibbonIcon('book-heart', 'Generate Summary', () => {
+			generateSummary.call(this, this.app.workspace.getActiveViewOfType(MarkdownView), {
+				style: this.settings.defaultStyle,
+				isStreamOpen: this.settings.isStreamOpen,
+				LLMModel: this.settings.LLMModel, length:
+					this.settings.defaultLength
+			})
+		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('abstract-generate-icon');
 
@@ -30,17 +37,29 @@ export default class AbstractGeneratePlugin extends Plugin {
 		const statusBarItemEl = this.addStatusBarItem();
 		statusBarItemEl.setText('Status Bar Text');
 
+		//shortcuts for gernate different style content		
+		for (const [key, value] of Object.entries(styleSettingOptions)) {
+			this.addCommand({
+				id: `${key}_generate`,
+				name: `生成${value}摘要`,
+				editorCallback: (editor: Editor, view: MarkdownView) => {
+					generateSummary.call(this, view, {
+						style: key,
+						isStreamOpen: this.settings.isStreamOpen,
+						LLMModel: this.settings.LLMModel, length: this.settings.defaultLength
+					})
+				}
+			});
+		}
+
 		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-
-
-		// I think there can be raplced by shortcut for gernate different style content[!mark]
+		// this.addCommand({
+		// 	id: 'open-sample-modal-simple',
+		// 	name: 'Open sample modal (simple)',
+		// 	callback: () => {
+		// 		new SampleModal(this.app).open();
+		// 	}
+		// });
 		// This adds an editor command that can perform some operation on the current editor instance
 		// this.addCommand({
 		// 	id: 'sample-editor-command',
@@ -80,7 +99,7 @@ export default class AbstractGeneratePlugin extends Plugin {
 		// });
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
 	onunload() {
@@ -130,17 +149,10 @@ class PromotSettingTab extends PluginSettingTab {
 			.setName('默认风格')
 			.setDesc('选择摘要的生成风格')
 			.addDropdown((dropdown) => {
-				const settingOptions = {
-					"normal_promot": "通用风格",
-					"redbook_prompt": "小红书(内容分享社区)",
-					"zhihu_prompt": "知乎(问答社区)",
-					"gzh_prompt": "公众号(内容营销)",
-					"weibo_prompt": "微博(社交平台)",
-					"news_prompt": "新闻报道(媒体宣传)"
-				}
+
 
 				dropdown
-					.addOptions(settingOptions)
+					.addOptions(styleSettingOptions)
 					.setValue(this.plugin.settings.defaultStyle)
 					.onChange(async (value) => {
 						this.plugin.settings.defaultStyle = value;
@@ -165,6 +177,10 @@ class PromotSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) => {
 				const settingOptions = {
 					"ERNIE_35_8K": "ERNIE_3.5_8K",
+					"ERNIE_35_8K_0205": "ERNIE_3.5_8K_0205",
+					"ERNIE_40": "ERNIE_4.0",
+					"ERNIE_40_8K_pre": "ERNIE_4.0_8K_preview",
+					"ERNIE_40_8K_p": "ERNIE_40_8K_pre(抢占版)",
 				}
 
 				dropdown
@@ -175,26 +191,21 @@ class PromotSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+		// default length setting	
 		new Setting(containerEl)
-		.setName('摘要长度')
-		.setDesc('摘要的长度设置')
-		.addText(text => {
-			text.setValue(this.plugin.settings.defaultLength.toString())
-			.onChange(async (value) => {
-				this.plugin.settings.defaultLength = parseInt(value);
-				await this.plugin.saveSettings();
-			});
+			.setName('摘要长度')
+			.setDesc('摘要的长度设置')
+			.addText(text => {
+				text.setValue(this.plugin.settings.defaultLength.toString())
+					.onChange(async (value) => {
+						this.plugin.settings.defaultLength = parseInt(value);
+						await this.plugin.saveSettings();
+					});
 
-		});
+			});
 	}
 }
 
-// getActiveViewMD returns the active MarkdownView
-function getActiveViewMD() {
-	const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-
-	return activeView;
-}
 
 // sendmdToBackend sends data to the backend
 async function runPrompt(articleContent: object) {
@@ -216,69 +227,39 @@ async function runPrompt(articleContent: object) {
 	}
 }
 // getActiveCursor returns the active cursor
-function typeWord(editor: Editor,cursor:EditorPosition, text: string) {
+function typeWord(editor: Editor, cursor: EditorPosition, text: string) {
 	editor.replaceRange(text, cursor);
 }
 
 // functions for stream type, but have not be implement 
-
-// function typeWord2(editor: Editor) {
-// 	let enableCursor = true;  // 启用光标效果
+// function typeWordStream(editor: Editor) {
 // 	let char_index = 0;
 // 	let text = 'Hello, World';
 //     let cursor = editor.getCursor();
 //     let docValue = editor.getValue();
 
-//     //移除原有的光标
-//     if (enableCursor && docValue.endsWith('|')) {
+//     if (docValue.endsWith('|')) {
 //         docValue = docValue.slice(0, -1);
 //     }
 
 //     if (char_index < text.length) {
-//         let cursorChar = enableCursor ? "|" : "";
+//         let cursorChar = "|" ;
 //         editor.setValue(docValue + text.charAt(char_index) + cursorChar);
-//         editor.setCursor({line: cursor.line, ch: cursor.ch + 1}) //移动光标
+//         editor.setCursor({line: cursor.line, ch: cursor.ch + 1}) 
 //         char_index++;
-//         // setTimeout(typeWord2, 1000/5);  // 打字机速度控制, 每秒5个字
+//         setTimeout(typeWordStream, 1000/5);  
 //     }
 // }
 
-
-
-// function run_prompt() {
-//     // 调用服务端的流式接口, 修改为自己的服务器地址和端口号
-//     fetch('http://<server address>:8000/eb_stream', {
-//       method: 'post',
-//       headers: {'Content-Type': 'text/plain'},
-//       body: JSON.stringify({'prompt': inputValue})
-//     })
-//     .then(response => {
-//       return response.body;
-//     })
-//     .then(body => {
-//       const reader = body.getReader();
-//       const decoder = new TextDecoder();
-//       function read() {
-//         return reader.read().then(({ done, value }) => {
-//           if (done) { // 读取完成
-//             return;
-//           }
-//           data = decoder.decode(value, { stream: true });
-//           text += JSON.parse(data).result;
-//           type();  // 打字机效果输出
-//           return read();
-//         });
-//       }
-//       return read();
-//     })
-//     .catch(error => {
-//       console.error('发生错误:', error);
-//     });
-//   }
-
 // generateSummary generates a summary
-async function generateSummary (evt: MouseEvent) {
-	const activeView = getActiveViewMD.call(this);
+async function generateSummary(activeView: MarkdownView,
+	args: { style: string, isStreamOpen: boolean, LLMModel: string, length: number } = {
+		style: "normal_promot",
+		isStreamOpen: false,
+		LLMModel: "ERNIE_35_8K",
+		length: 200
+	},
+) {
 	if (!activeView) {
 		new Notice('No active Markdown view.');
 		return;
@@ -286,6 +267,10 @@ async function generateSummary (evt: MouseEvent) {
 	const activeFile = activeView.file;
 	const activeEditor = activeView.editor;
 	const activeCursor = activeEditor.getCursor();
+	if (!activeFile) {
+		new Notice('No active File.');
+		return;
+	}
 
 	// const filePath = activefile.vault.adapter.getFullPath(activefile.path);
 	const activeFileTitle = activeFile.basename;
@@ -293,20 +278,32 @@ async function generateSummary (evt: MouseEvent) {
 	const payloadActiveContent = {
 		content: activeFilecontent,
 		title: activeFileTitle,
-		style: this.settings.defaultStyle,
-		isStreamOpen: this.settings.isStreamOpen,
-		LLMModel: this.settings.LLMModel,
-		length: this.settings.defaultLength.toString()
+		style: args.style,
+		isStreamOpen: args.isStreamOpen,
+		LLMModel: args.LLMModel,
+		length: args.length.toString()
 	};
-	// get response from backend
-	// const response = await runPrompt(payloadActiveContent);
-	const response = await runWithLoading(activeEditor,activeCursor,runPrompt,[payloadActiveContent]);
-	// console.log(response);
+	// get response from backend for stream type. not implement yet
+	// runPrompt(payloadActiveContent)
+	// .then(response => response?.json)
+	// .then(const reader = body.getReader();
+	//       const decoder = new TextDecoder();
+	//       ...)
+	// .then(generatedJSON => {
+	// 	typeWord(activeEditor, activeCursor, generatedJSON.result);
+	// 	new Notice('Summary Generated Successfully!✨');
+	// 	new Notice('tokens consumed: ' + generatedJSON.usage.total_tokens);
+	// })
+	// .catch(
+	// 	e => {console.error(e);
+	// 	new Notice('Summary Generatation Failed!😭');
+	// }
+	// );	
+	const response = await runWithLoading(activeEditor, activeCursor, runPrompt, [payloadActiveContent]);
 	if (response) {
 		const generatedJSON = JSON.parse(response.json);
-		typeWord(activeView.editor,activeCursor, generatedJSON.result);
+		typeWord(activeView.editor, activeCursor, generatedJSON.result);
 		new Notice('Summary Generated Successfully!✨');
-		console.log(generatedJSON);
 		new Notice('tokens consumed: ' + generatedJSON.usage.total_tokens);
 	} else {
 		new Notice('Summary Generatation Failed!😭');
@@ -314,23 +311,23 @@ async function generateSummary (evt: MouseEvent) {
 
 }
 // add cute animation when waiting for the response
-async function runWithLoading(editor:Editor, pos:EditorPosition,asyncFunc:Function,args:any[] ) {
-    let chars = ["|", "/", "-", "\\"];
-    let i = 0;
+async function runWithLoading(editor: Editor, pos: EditorPosition, asyncFunc: Function, args: any[]) {
+	let chars = ["|", "/", "-", "\\"];
+	let i = 0;
 
-    let loadingStrPos = {...pos};
-    editor.replaceRange(chars[i++ % chars.length], pos);
+	let loadingStrPos = { ...pos };
+	editor.replaceRange(chars[i++ % chars.length], pos);
 
-    // waiting for the function to finish
-    let interval = setInterval(() => {
-        let replacePos = {...loadingStrPos};
-        editor.replaceRange(chars[i++ % chars.length], replacePos, {line: replacePos.line, ch: replacePos.ch+1});
-    }, 100);
+	// waiting for the function to finish
+	let interval = setInterval(() => {
+		let replacePos = { ...loadingStrPos };
+		editor.replaceRange(chars[i++ % chars.length], replacePos, { line: replacePos.line, ch: replacePos.ch + 1 });
+	}, 100);
 
-    let result=await asyncFunc(...args);
+	let result = await asyncFunc(...args);
 
-    // clear the loading animation
-    clearInterval(interval);
-    editor.replaceRange('', loadingStrPos, {line: loadingStrPos.line, ch: loadingStrPos.ch+1});
+	// clear the loading animation
+	clearInterval(interval);
+	editor.replaceRange('', loadingStrPos, { line: loadingStrPos.line, ch: loadingStrPos.ch + 1 });
 	return result;
 }

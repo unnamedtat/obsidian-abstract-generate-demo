@@ -12,8 +12,7 @@ def get_post_message(article_data:json):
 # users can select the model and promots they want to use
 def ask_Q(article_data: str):
     try:
-        url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=" + os.environ['ACCESS_TOKEN']
-        # 我没充值，所以我没法调用其他model的接口，这里没用其他url
+        url = eval(article_data['LLMModel'])+"?access_token=" + os.environ['ACCESS_TOKEN']
 
         payload = json.dumps({
         "messages": [
@@ -21,7 +20,9 @@ def ask_Q(article_data: str):
                 "role": "user",
                 "content": get_post_message(article_data)
             }
-        ]
+        ],
+        # "stream":article_data['isStreamOpen']
+        # need StreamingHttpResponse
         })
         headers = {
             'Content-Type': 'application/json'
